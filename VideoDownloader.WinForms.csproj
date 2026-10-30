@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>VideoDownloader.WinForms</RootNamespace>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>preview</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+  </ItemGroup>
+
+  <!--
+    Reuse existing business logic from the WinUI project via file links.
+    Platform-specific (WinUI/XAML) files are excluded.
+  -->
+  <ItemGroup>
+    <Compile Include="Original\\Helpers\\UrlValidator.cs" />
+    <Compile Include="Original\\Helpers\\ByteFormatter.cs" />
+    <Compile Include="Original\\Helpers\\FormatSelector.cs" />
+    <Compile Include="Original\\Helpers\\YtDlpArgumentBuilder.cs" />
+    <Compile Include="Original\\Helpers\\YtDlpProgressParser.cs" />
+    <Compile Include="Original\\Helpers\\MediaInfoParser.cs" />
+    <Compile Include="Original\\Helpers\\ToolPathResolver.cs" />
+    <Compile Include="Original\\Helpers\\ProcessRunner.cs" />
+    <Compile Include="Original\\Helpers\\FileLoggerProvider.cs" />
+    <Compile Include="Original\\Configuration\\AppPaths.cs" />
+    <Compile Include="Original\\Models\\DownloadOptions.cs" />
+    <Compile Include="Original\\Models\\MediaInfo.cs" />
+    <Compile Include="Original\\Models\\DownloadItem.cs" />
+    <Compile Include="Original\\Models\\DownloadResult.cs" />
+    <Compile Include="Original\\Models\\DownloadHistoryRecord.cs" />
+    <Compile Include="Original\\Models\\ApplicationSettings.cs" />
+    <Compile Include="Original\\Models\\ConversionOptions.cs" />
+    <Compile Include="Original\\Models\\ConversionResult.cs" />
+    <Compile Include="Original\\Services\\YtDlpService.cs" />
+    <Compile Include="Original\\Services\\FFmpegService.cs" />
+    <Compile Include="Original\\Services\\FFprobeService.cs" />
+    <Compile Include="Original\\Services\\MediaAnalysisService.cs" />
+    <Compile Include="Original\\Services\\ToolPathService.cs" />
+    <Compile Include="Original\\Services\\ToolValidationService.cs" />
+    <Compile Include="Services\WinFormsUiDispatcher.cs" />
+    <Compile Include="Original\Services\DownloadQueueService.cs" />
+    <Compile Include="Original\\Services\\DownloadHistoryService.cs" />
+    <Compile Include="Original\\Services\\SettingsService.cs" />
+    <Compile Include="Original\\Data\\AppDatabase.cs" />
+    <Compile Include="Original\\Data\\Repositories\DownloadHistoryRepository.cs" />
+    <Compile Include="Original\\Data\\Repositories\SettingsRepository.cs" />
+    <Compile Include="Original\\Services\\FileManagementService.cs" />
+    <Compile Include="Original\\Services\\NotificationService.cs" />
+    <Compile Include="Original\\Services\\DownloadPathService.cs" />
+    <Compile Include="Services\ThemeService.cs" />
+    <Compile Include="Services\LocalizationService.cs" />
+    <Compile Include="Services\FolderPickerService.cs" />
+    <Compile Include="Services\DialogService.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Forms\*.cs" />
+    <Compile Include="Controls\*.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <BundledToolsDirectory>$(MSBuildThisFileDirectory)..\Tools\</BundledToolsDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(BundledToolsDirectory)yt-dlp\yt-dlp.exe" Link="Tools\yt-dlp\yt-dlp.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(BundledToolsDirectory)yt-dlp\yt-dlp.exe')" />
+    <None Include="$(BundledToolsDirectory)ffmpeg\ffmpeg.exe" Link="Tools\ffmpeg\ffmpeg.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(BundledToolsDirectory)ffmpeg\ffmpeg.exe')" />
+    <None Include="$(BundledToolsDirectory)ffmpeg\ffprobe.exe" Link="Tools\ffmpeg\ffprobe.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(BundledToolsDirectory)ffmpeg\ffprobe.exe')" />
+  </ItemGroup>
+
+</Project>
+
+
+

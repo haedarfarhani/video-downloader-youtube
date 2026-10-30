@@ -1,0 +1,47 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.binlog
+
+# Visual Studio
+.vs/
+*.vspscc
+*.vssscc
+
+# Test results
+[Tt]est[Rr]esult*/
+coverage/
+*.coverage
+*.trx
+
+# MSIX / publishing output
+AppPackages/
+BundleArtifacts/
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+*.appxupload
+
+# Bundled third-party tools (installed by scripts/Setup-Tools.ps1)
+Tools/yt-dlp/*.exe
+Tools/ffmpeg/*.exe
+Tools/**/*.pdb
+Tools/**/*.zip
+
+# Local runtime data
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# OS files
+Thumbs.db
+desktop.ini
+.DS_Store
