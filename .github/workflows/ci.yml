@@ -1,0 +1,117 @@
+# CI Build — Windows Forms .NET 8
+# Triggers: push to main/develop, PRs to main
+# Produces: VideoDownloader-win-x64.zip + build metadata (retention: 14 days)
+# Note: Bundled tools (yt-dlp/ffmpeg) must be present in Tools/ for full runtime.
+#       They are excluded from git by .gitignore; add them locally or via setup script.
+name: CI Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    # Optional approval is configured on the release workflow, not this CI job.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore NuGet dependencies
+        run: dotnet restore VideoDownloader.WinForms.csproj
+        shell: pwsh
+
+      - name: Build (Release)
+        run: dotnet build VideoDownloader.WinForms.csproj -c Release --no-restore
+        shell: pwsh
+
+      - name: Run automated tests
+        shell: pwsh
+        run: |
+          $testProject = "tests/VideoDownloader.Tests/VideoDownloader.Tests.csproj"
+          if (Test-Path $testProject) {
+            Write-Host "Test project found. Running tests..."
+            dotnet test $testProject -c Release --no-restore --verbosity normal
+          } else {
+            Write-Host "No test project found at $testProject; skipping tests (expected for this repo layout)."
+            Write-Host "If you add tests, place them at tests/VideoDownloader.Tests/VideoDownloader.Tests.csproj."
+          }
+
+      - name: Determine build version
+        id: version
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF -replace 'refs/tags/', ''
+          if ($tag -match '^v(.+)$') {
+            $ver = $matches[1]
+          } else {
+            # Non-release build: derive from SHA + build number for traceability
+            $ver = "0.0.0+${env:GITHUB_SHA.Substring(0,7)}.${env:GITHUB_RUN_NUMBER}"
+          }
+          Write-Host "Version=$ver"
+          "version=$ver" >> $env:GITHUB_OUTPUT
+          Write-Host "version=$ver" >> $env:GITHUB_ENV
+
+      - name: Publish application (win-x64, self-contained)
+        shell: pwsh
+        run: |
+          # PublishSingleFile is NOT compatible with this app:
+          # external .exe dependencies (yt-dlp, ffmpeg) must remain as separate files
+          # and native SQLite libraries need loose deployment for correct loading.
+          dotnet publish VideoDownloader.WinForms.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=false `
+            -p:Version=${{ steps.version.outputs.version }} `
+            -o "publish/win-x64"
+
+      - name: Package distributable ZIP
+        shell: pwsh
+        run: |
+          $sliceName = "VideoDownloader-win-x64"
+          New-Item -ItemType Directory -Force -Path $sliceName | Out-Null
+          Copy-Item -Path "publish/win-x64/*" -Destination $sliceName -Recurse -Force
+          Compress-Archive -Path $sliceName -DestinationPath "VideoDownloader-win-x64.zip" -Force
+          Write-Host "Created VideoDownloader-win-x64.zip"
+
+      - name: Build metadata
+        shell: pwsh
+        run: |
+          @"
+          Repository: ${{ github.repository }}
+          Workflow: ${{ github.workflow }}
+          Run ID: ${{ github.run_id }}
+          Commit SHA: ${{ github.sha }}
+          Branch/Ref: ${{ github.ref_name }}
+          Build version: ${{ env:version }}
+          Trigger: ${{ github.event_name }}
+          Timestamp: $(Get-Date -Format o)
+          "@ | Out-File -FilePath build-metadata.txt -Encoding utf8
+          Write-Host "Created build-metadata.txt"
+
+      - name: Upload application ZIP artifact (14 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: VideoDownloader-win-x64
+          path: VideoDownloader-win-x64.zip
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload build metadata artifact (14 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-metadata
+          path: build-metadata.txt
+          retention-days: 14
+          if-no-files-found: ignore
